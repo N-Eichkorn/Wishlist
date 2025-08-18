@@ -13,10 +13,13 @@ package main
 // You may also need to run `go mod tidy` to download bubbletea and its
 // dependencies.
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"os"
-	"os/user"
+
+	_ "github.com/mattn/go-sqlite3"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/joho/godotenv"
@@ -118,20 +121,55 @@ func initialModel() model {
 }
 
 func main() {
-	p := tea.NewProgram(initialModel())
-	if _, err := p.Run(); err != nil {
-		fmt.Printf("Alas, there's been an error: %v", err)
-		os.Exit(1)
-	}
-	fmt.Println(user.Current()) //return current username
-	fmt.Println(os.Hostname())
 
+	var database_location string
+
+	argus := os.Args
+	if len(argus) >= 2 {
+		switch argus[1] {
+		case "--init":
+			//setup database ----------------------------------------------
+			if len(argus) > 2 {
+				database_location = argus[2]
+			} else {
+				database_location = "./data.db"
+			}
+
+			os.Create(database_location)
+			fmt.Println("\t + databasefile created")
+			db, err := sql.Open("sqlite3", database_location)
+			if err != nil {
+				fmt.Print(err)
+			}
+			db.Exec("CREATE TABLE Test(id INTEGER PRIMARY KEY, t1 TEXT);")
+			fmt.Println("\t + database initiated")
+			db.Close()
+			// STOP
+			//setup settings.env ------------------------------------------
+			settings_location := "settings.env"
+			if _, err := os.Stat(settings_location); errors.Is(err, os.ErrNotExist) {
+				os.Create(settings_location)
+				fmt.Println("\t" + settings_location + " created")
+			} else {
+				fmt.Println("\t +" + settings_location + " is existing")
+			}
+
+			//write settings ---------------------------------------------
+			data := []byte("DATABASE=" + database_location + "\n" +
+				"SETTINGS=" + settings_location + "\n")
+			os.WriteFile(settings_location, data, 0644)
+
+		case "--help":
+			fmt.Print("Possible Options: \n " +
+				"\t --help \t show this help site \n" +
+				"\t --init <path> \t create database  at <path>. If path is empty the path is ./data.db \n")
+		default:
+		}
+	}
+	//Load ENV file-----------------------
 	err := godotenv.Load("settings.env")
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-
-	fmt.Println(os.Getenv("S3_BUCKET"))
-	fmt.Println(os.Getenv("SECRET_KEY"))
 
 }

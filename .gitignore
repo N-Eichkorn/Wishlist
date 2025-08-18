@@ -25,7 +25,10 @@ go.work
 go.work.sum
 
 # env file
-.env
+settings.env
+
+# database
+*.db
 
 # Editor/IDE
 # .idea/
