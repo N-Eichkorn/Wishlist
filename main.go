@@ -139,8 +139,8 @@ func main() {
 			if err != nil {
 				fmt.Print(err)
 			}
-			_, err = db.Exec("CREATE TABLE Users (Username	TEXT, PRIMARY KEY(Username))
-			;")
+			sql_init, _ := os.ReadFile("sql_init.sql")
+			_, err = db.Exec(string(sql_init))
 			if err != nil {
 				fmt.Print(err)
 			}
@@ -151,14 +151,13 @@ func main() {
 			settings_location := "settings.env"
 			if _, err := os.Stat(settings_location); errors.Is(err, os.ErrNotExist) {
 				os.Create(settings_location)
-				fmt.Println("\t" + settings_location + " created")
+				fmt.Println("\t + " + settings_location + " created")
 			} else {
 				fmt.Println("\t + " + settings_location + " is existing")
 			}
 
 			//write settings ---------------------------------------------
-			data := []byte("DATABASE=" + database_location + "\n" +
-				"SETTINGS=" + settings_location + "\n")
+			data := []byte("DATABASE=" + database_location)
 			os.WriteFile(settings_location, data, 0644)
 
 		case "--help":
