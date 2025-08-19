@@ -46,13 +46,13 @@ func main() {
 		}
 	}
 	//Load ENV file----------------------------------------------
-	err := godotenv.Load("settings.env")
+	err := godotenv.Load(settings_location)
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
 	//Check if user is registerd ----------------------------------------------
-	if os.Getenv("WISHLIST_USER") == "null" {
+	if os.Getenv(env_wishlist_user) == "null" {
 		register_user()
 	}
 
