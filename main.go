@@ -19,9 +19,18 @@ import (
 	"log"
 	"os"
 
+	"github.com/rivo/tview"
+
 	_ "modernc.org/sqlite"
 
 	"github.com/joho/godotenv"
+)
+
+const (
+	env_database              = "DATABASE"
+	env_wishlist_user         = "WISHLIST_USER"
+	settings_location         = "settings.env"
+	default_database_location = "./data.db"
 )
 
 func main() {
@@ -32,16 +41,19 @@ func main() {
 		case "--init":
 			init_programm(argus)
 		case "--help":
-			fmt.Print("Possible Options: \n " +
-				"\t --help \t show this help site \n" +
-				"\t --init <path> \t create database  at <path>. If path is empty the path is ./data.db \n")
+			print_help()
 		default:
 		}
 	}
-	//Load ENV file-----------------------
+	//Load ENV file----------------------------------------------
 	err := godotenv.Load("settings.env")
 	if err != nil {
 		log.Fatal("Error loading .env file")
+	}
+
+	//Check if user is registerd ----------------------------------------------
+	if os.Getenv("WISHLIST_USER") == "null" {
+		register_user()
 	}
 
 }
@@ -52,7 +64,7 @@ func init_programm(argus []string) {
 	if len(argus) > 2 {
 		database_location = argus[2]
 	} else {
-		database_location = "./data.db"
+		database_location = default_database_location
 	}
 
 	db, err := sql.Open("sqlite", database_location)
@@ -67,8 +79,8 @@ func init_programm(argus []string) {
 	fmt.Println("\t + database initiated")
 	db.Close()
 
-	//setup settings.env ------------------------------------------
-	settings_location := "settings.env"
+	//setup settings.env ----------------------------------------------
+
 	if _, err := os.Stat(settings_location); errors.Is(err, os.ErrNotExist) {
 		os.Create(settings_location)
 		fmt.Println("\t + " + settings_location + " created")
@@ -76,7 +88,48 @@ func init_programm(argus []string) {
 		fmt.Println("\t + " + settings_location + " is existing")
 	}
 
-	//write settings ---------------------------------------------
-	data := []byte("DATABASE=" + database_location)
+	//write settings ----------------------------------------------
+	data := []byte(env_database + "=" + database_location + "\n" +
+		env_wishlist_user + "=" + "null\n")
+	os.WriteFile(settings_location, data, 0644)
+}
+
+func print_help() {
+	fmt.Print("Possible Options: \n " +
+		"\t --help \t show this help site \n" +
+		"\t --init <path> \t create database  at <path>. If path is empty the path is ./data.db \n")
+}
+
+func register_user() {
+	app := tview.NewApplication()
+	form := tview.NewForm().
+		AddInputField("Username", "", 20, nil, nil).
+		AddButton("Save", func() {
+			app.Stop()
+		}).
+		AddButton("Cancel", func() {
+			os.Exit(0)
+		})
+	form.SetBorder(false).SetTitle("Register your User").SetTitleAlign(tview.AlignLeft)
+	if err := app.SetRoot(form, true).EnableMouse(true).EnablePaste(true).Run(); err != nil {
+		panic(err)
+	}
+	os.Setenv(env_wishlist_user, form.GetFormItem(0).(*tview.InputField).GetText())
+
+	db, err := sql.Open("sqlite", os.Getenv(env_database))
+	if err != nil {
+		fmt.Print(err)
+	}
+	_, err = db.Exec("INSERT INTO Users VALUES ('" + os.Getenv(env_wishlist_user) + "');")
+	if err != nil {
+		fmt.Print(err)
+	}
+	write_settings()
+	db.Close()
+}
+
+func write_settings() {
+	data := []byte(env_database + "=" + os.Getenv(env_database) + "\n" +
+		env_wishlist_user + "=" + os.Getenv(env_wishlist_user) + "\n")
 	os.WriteFile(settings_location, data, 0644)
 }
