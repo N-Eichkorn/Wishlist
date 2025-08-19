@@ -19,7 +19,7 @@ import (
 	"log"
 	"os"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/joho/godotenv"
@@ -135,23 +135,25 @@ func main() {
 				database_location = "./data.db"
 			}
 
-			os.Create(database_location)
-			fmt.Println("\t + databasefile created")
-			db, err := sql.Open("sqlite3", database_location)
+			db, err := sql.Open("sqlite", database_location)
 			if err != nil {
 				fmt.Print(err)
 			}
-			db.Exec("CREATE TABLE Test(id INTEGER PRIMARY KEY, t1 TEXT);")
+			_, err = db.Exec("CREATE TABLE Users (Username	TEXT, PRIMARY KEY(Username))
+			;")
+			if err != nil {
+				fmt.Print(err)
+			}
 			fmt.Println("\t + database initiated")
 			db.Close()
-			// STOP
+
 			//setup settings.env ------------------------------------------
 			settings_location := "settings.env"
 			if _, err := os.Stat(settings_location); errors.Is(err, os.ErrNotExist) {
 				os.Create(settings_location)
 				fmt.Println("\t" + settings_location + " created")
 			} else {
-				fmt.Println("\t +" + settings_location + " is existing")
+				fmt.Println("\t + " + settings_location + " is existing")
 			}
 
 			//write settings ---------------------------------------------
