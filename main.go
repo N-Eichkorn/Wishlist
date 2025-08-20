@@ -46,16 +46,19 @@ func main() {
 		}
 	}
 	//Load ENV file----------------------------------------------
-	err := godotenv.Load(settings_location)
-	if err != nil {
+	if godotenv.Load(settings_location) != nil {
 		log.Fatal("Error loading .env file")
 	}
 
 	//Check if user is registerd ----------------------------------------------
 	if os.Getenv(env_wishlist_user) == "null" {
-		register_user()
+		if !register_user() {
+			os.Exit(0)
+		}
 	}
 
+	//Start main window ----------------------------------------------
+	print_main_window()
 }
 
 func init_programm(argus []string) {
@@ -100,7 +103,8 @@ func print_help() {
 		"\t --init <path> \t create database  at <path>. If path is empty the path is ./data.db \n")
 }
 
-func register_user() {
+func register_user() bool {
+	return_value := true
 	app := tview.NewApplication()
 	form := tview.NewForm().
 		AddInputField("Username", "", 20, nil, nil).
@@ -108,7 +112,7 @@ func register_user() {
 			app.Stop()
 		}).
 		AddButton("Cancel", func() {
-			os.Exit(0)
+			return_value = false
 		})
 	form.SetBorder(false).SetTitle("Register your User").SetTitleAlign(tview.AlignLeft)
 	if err := app.SetRoot(form, true).EnableMouse(true).EnablePaste(true).Run(); err != nil {
@@ -126,10 +130,43 @@ func register_user() {
 	}
 	write_settings()
 	db.Close()
+	return return_value
 }
 
 func write_settings() {
 	data := []byte(env_database + "=" + os.Getenv(env_database) + "\n" +
 		env_wishlist_user + "=" + os.Getenv(env_wishlist_user) + "\n")
 	os.WriteFile(settings_location, data, 0644)
+}
+
+func print_main_window() {
+	newPrimitive := func(text string) tview.Primitive {
+		return tview.NewTextView().
+			SetTextAlign(tview.AlignCenter).
+			SetText(text)
+	}
+	menu := newPrimitive("Menu")
+	main := newPrimitive("Main content")
+	sideBar := newPrimitive("Side Bar")
+
+	grid := tview.NewGrid().
+		SetRows(3, 0, 3).
+		SetColumns(30, 0, 30).
+		SetBorders(true).
+		AddItem(newPrimitive("Header"), 0, 0, 1, 3, 0, 0, false).
+		AddItem(newPrimitive("Footer"), 2, 0, 1, 3, 0, 0, false)
+
+	// Layout for screens narrower than 100 cells (menu and side bar are hidden).
+	grid.AddItem(menu, 0, 0, 0, 0, 0, 0, false).
+		AddItem(main, 1, 0, 1, 3, 0, 0, false).
+		AddItem(sideBar, 0, 0, 0, 0, 0, 0, false)
+
+	// Layout for screens wider than 100 cells.
+	grid.AddItem(menu, 1, 0, 1, 1, 0, 100, false).
+		AddItem(main, 1, 1, 1, 1, 0, 100, false).
+		AddItem(sideBar, 1, 2, 1, 1, 0, 100, false)
+
+	if err := tview.NewApplication().SetRoot(grid, true).EnableMouse(true).Run(); err != nil {
+		panic(err)
+	}
 }
