@@ -145,6 +145,7 @@ func print_main_window() {
 			SetTextAlign(tview.AlignCenter).
 			SetText(text)
 	}
+
 	menu := newPrimitive("Menu")
 	main := newPrimitive("Main content")
 
@@ -155,10 +156,10 @@ func print_main_window() {
 		SetRows(3, 0).
 		SetColumns(30, 0).
 		SetBorders(true).
-		AddItem(newPrimitive("Header"), 0, 0, 1, 2, 0, 0, false)
-
-	// Layout for screens wider than 100 cells.
-	grid.AddItem(menu, 1, 0, 1, 1, 0, 100, false).
+		AddItem(tview.NewTextView().
+			SetTextAlign(tview.AlignCenter).
+			SetText("Start Programm"), 0, 0, 1, 2, 0, 0, false).
+		AddItem(menu, 1, 0, 1, 1, 0, 100, false).
 		AddItem(main, 1, 1, 1, 1, 0, 100, false)
 
 	if err := tview.NewApplication().SetRoot(grid, true).EnableMouse(true).Run(); err != nil {
