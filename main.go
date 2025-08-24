@@ -140,27 +140,33 @@ func write_settings() {
 }
 
 func print_main_window() {
-	newPrimitive := func(text string) tview.Primitive {
-		return tview.NewTextView().
-			SetTextAlign(tview.AlignCenter).
-			SetText(text)
-	}
 
-	menu := newPrimitive("Menu")
-	main := newPrimitive("Main content")
+	header := tview.NewTextView().SetTextAlign(tview.AlignCenter).SetText("" +
+		"__        ___     _     _ _     _    \n" +
+		"\\ \\      / (_)___| |__ | (_)___| |_  \n" +
+		" \\ \\ /\\ / /| / __| '_ \\| | / __| __| \n" +
+		"  \\ V  V / | \\__ \\ | | | | \\__ \\ |_  \n" +
+		"   \\_/\\_/  |_|___/_| |_|_|_|___/\\__| \n")
+
+	menu := tview.NewTextView().SetTextAlign(tview.AlignCenter).SetText("Menue")
+
+	list := tview.NewList().
+		AddItem("List item 1", "Some explanatory text", 'a', nil).
+		AddItem("List item 2", "Some explanatory text", 'b', nil).
+		AddItem("List item 3", "Some explanatory text", 'c', nil).
+		AddItem("List item 4", "Some explanatory text", 'd', nil).
+		AddItem("Quit", "Press to exit", 'q', nil)
 
 	button := tview.NewButton("Hit Enter to close")
 	button.SetBorder(true).SetRect(0, 0, 22, 3)
 
 	grid := tview.NewGrid().
-		SetRows(3, 0).
-		SetColumns(30, 0).
+		SetRows(5, 0).
+		SetColumns(40, 0).
 		SetBorders(true).
-		AddItem(tview.NewTextView().
-			SetTextAlign(tview.AlignCenter).
-			SetText("Start Programm"), 0, 0, 1, 2, 0, 0, false).
+		AddItem(header, 0, 0, 1, 2, 0, 0, false).
 		AddItem(menu, 1, 0, 1, 1, 0, 100, false).
-		AddItem(main, 1, 1, 1, 1, 0, 100, false)
+		AddItem(list, 1, 1, 1, 1, 0, 100, false)
 
 	if err := tview.NewApplication().SetRoot(grid, true).EnableMouse(true).Run(); err != nil {
 		panic(err)
