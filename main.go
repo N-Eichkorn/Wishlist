@@ -150,12 +150,7 @@ func print_main_window() {
 
 	menu := tview.NewTextView().SetTextAlign(tview.AlignCenter).SetText("Menue")
 
-	list := tview.NewList().
-		AddItem("List item 1", "Some explanatory text", 'a', nil).
-		AddItem("List item 2", "Some explanatory text", 'b', nil).
-		AddItem("List item 3", "Some explanatory text", 'c', nil).
-		AddItem("List item 4", "Some explanatory text", 'd', nil).
-		AddItem("Quit", "Press to exit", 'q', nil)
+	whises := get_wishes()
 
 	button := tview.NewButton("Hit Enter to close")
 	button.SetBorder(true).SetRect(0, 0, 22, 3)
@@ -166,9 +161,53 @@ func print_main_window() {
 		SetBorders(true).
 		AddItem(header, 0, 0, 1, 2, 0, 0, false).
 		AddItem(menu, 1, 0, 1, 1, 0, 100, false).
-		AddItem(list, 1, 1, 1, 1, 0, 100, false)
+		AddItem(whises, 1, 1, 1, 1, 0, 100, false)
 
 	if err := tview.NewApplication().SetRoot(grid, true).EnableMouse(true).Run(); err != nil {
 		panic(err)
 	}
+}
+
+type Wish struct {
+	ID int8
+	FROM string
+	TO string
+	WISH string
+	TIMESTAMP string
+}
+
+type Wishes Wish[]
+
+func get_wishes() *tview.List {
+	list := tview.NewList().
+		AddItem("List item 1", "Some explanatory text", 'a', nil).
+		AddItem("List item 2", "Some explanatory text", 'b', nil).
+		AddItem("List item 3", "Some explanatory text", 'c', nil).
+		AddItem("List item 4", "Some explanatory text", 'd', nil).
+		AddItem("Quit", "Press to exit", 'q', nil)
+
+	db, err := sql.Open("sqlite", os.Getenv(env_database))
+	rows, err := db.Query("SELECT * FROM Wishes")
+	if err != nil {
+		return nil
+	}
+	defer rows.Close()
+
+	// An album slice to hold data from returned rows.
+	var albums []Album
+
+	// Loop through rows, using Scan to assign column data to struct fields.
+	for rows.Next() {
+		var alb Album
+		if err := rows.Scan(&alb.ID, &alb.Title, &alb.Artist,
+			&alb.Price, &alb.Quantity); err != nil {
+			return albums, err
+		}
+		albums = append(albums, alb)
+	}
+	if err = rows.Err(); err != nil {
+		return albums, err
+	}
+	db.Close()
+	return list
 }
