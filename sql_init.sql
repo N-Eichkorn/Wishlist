@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS "Wishes" (
 	"from"	TEXT NOT NULL,
 	"to"	TEXT NOT NULL,
 	"wish"	TEXT NOT NULL,
-	"timestamp"	TEXT NOT NULL DEFAULT current_timestamp,
+	"timestamp"	INTEGER NOT NULL DEFAULT current_timestamp,
 	PRIMARY KEY("id" AUTOINCREMENT),
 	FOREIGN KEY("from") REFERENCES "Users"("Username"),
 	FOREIGN KEY("to") REFERENCES "Users"("Username")

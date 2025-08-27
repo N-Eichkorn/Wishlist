@@ -8,10 +8,6 @@
 
 package main
 
-// These imports will be used later on the tutorial. If you save the file
-// now, Go might complain they are unused, but that's fine.
-// You may also need to run `go mod tidy` to download bubbletea and its
-// dependencies.
 import (
 	"database/sql"
 	"errors"
@@ -32,6 +28,16 @@ const (
 	settings_location         = "settings.env"
 	default_database_location = "./data.db"
 )
+
+type Wish struct {
+	ID        int8
+	FROM      string
+	TO        string
+	WISH      string
+	TIMESTAMP string
+}
+
+var Wishes []Wish
 
 func main() {
 
@@ -140,7 +146,8 @@ func write_settings() {
 }
 
 func print_main_window() {
-
+	get_wishes()
+	app := tview.NewApplication()
 	header := tview.NewTextView().SetTextAlign(tview.AlignCenter).SetText("" +
 		"__        ___     _     _ _     _    \n" +
 		"\\ \\      / (_)___| |__ | (_)___| |_  \n" +
@@ -148,49 +155,50 @@ func print_main_window() {
 		"  \\ V  V / | \\__ \\ | | | | \\__ \\ |_  \n" +
 		"   \\_/\\_/  |_|___/_| |_|_|_|___/\\__| \n")
 
-	whises := get_wishes()
+	alphabet := []int{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't'}
 
-	button := tview.NewButton("Hit to close")
-	button.SetBorder(true).SetRect(0, 0, 22, 3)
+	w := tview.NewList()
+
+	for i := 0; i < len(Wishes); i++ {
+		w.AddItem(Wishes[i].TIMESTAMP+": Whish from "+Wishes[i].FROM+" to "+Wishes[i].TO, Wishes[i].WISH, rune(alphabet[i]), nil)
+	}
+
+	button_grid := tview.NewGrid().SetRows(2, 2).
+		AddItem(tview.NewButton("Close App").SetSelectedFunc(func() {
+			app.Stop()
+		}), 0, 0, 1, 1, 5, 5, true).
+		AddItem(tview.NewButton("new Wish"), 1, 0, 1, 1, 5, 5, false)
 
 	grid := tview.NewGrid().
 		SetRows(5, 0).
-		SetColumns(40, 0).
+		SetColumns(20, 0).
 		SetBorders(true).
 		AddItem(header, 0, 0, 1, 2, 0, 0, false).
-		AddItem(button, 1, 0, 1, 1, 0, 100, false).
-		AddItem(whises, 1, 1, 1, 1, 0, 100, false)
+		AddItem(button_grid, 1, 0, 1, 1, 0, 100, false).
+		AddItem(w, 1, 1, 1, 1, 0, 100, false)
 
-	if err := tview.NewApplication().SetRoot(grid, true).EnableMouse(true).Run(); err != nil {
+	if err := app.SetRoot(grid, true).EnableMouse(true).Run(); err != nil {
 		panic(err)
 	}
 }
 
-type Wish struct {
-	ID        int8
-	FROM      string
-	TO        string
-	WISH      string
-	TIMESTAMP string
-}
+func get_wishes() {
 
-func get_wishes() *tview.List {
-
-	alphabet := []int{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't'}
-
-	list := tview.NewList()
+	Wishes = nil
 
 	db, _ := sql.Open("sqlite", os.Getenv(env_database))
 	defer db.Close()
-	rows, _ := db.Query("SELECT * FROM Wishes")
+	rows, err := db.Query("Select * from Wishes ORDER by timestamp desc limit 20;")
+	if err != nil {
+		fmt.Println(err)
+	}
 	i := 0
 	for rows.Next() {
 		var wi Wish
 		if err := rows.Scan(&wi.ID, &wi.FROM, &wi.TO, &wi.WISH, &wi.TIMESTAMP); err != nil {
 		}
-		list.AddItem(string(wi.TIMESTAMP)+": Wish from "+string(wi.FROM)+" to "+string(wi.TO), string(wi.WISH), rune(alphabet[i]), nil)
+		Wishes = append(Wishes, Wish{ID: wi.ID, FROM: wi.FROM, TO: wi.TO, WISH: wi.WISH, TIMESTAMP: wi.TIMESTAMP})
 		i++
 	}
 
-	return list
 }
