@@ -25,6 +25,8 @@ import (
 const (
 	env_database              = "DATABASE"
 	env_wishlist_user         = "WISHLIST_USER"
+	env_wishlist_to           = "WISHLIST_TO"
+	env_wishlist_wish         = "WISHLIST_WISH"
 	settings_location         = "settings.env"
 	default_database_location = "./data.db"
 )
@@ -38,6 +40,8 @@ type Wish struct {
 }
 
 var Wishes []Wish
+
+var Users []string
 
 func main() {
 
@@ -173,7 +177,10 @@ func print_main_window() {
 			w.Clear()
 			get_wishes()
 			generate_wishlist()
-		}), 1, 0, 1, 1, 5, 5, false)
+		}), 1, 0, 1, 1, 5, 5, false).
+		AddItem(tview.NewButton("WriteWish").SetSelectedFunc(func() {
+			print_wish_form()
+		}), 2, 0, 1, 1, 5, 5, false)
 
 	grid := tview.NewGrid().
 		SetRows(5, 0).
@@ -191,7 +198,6 @@ func print_main_window() {
 func get_wishes() {
 
 	Wishes = nil
-
 	db, _ := sql.Open("sqlite", os.Getenv(env_database))
 	defer db.Close()
 	rows, err := db.Query("Select * from Wishes ORDER by timestamp desc limit 20;")
@@ -207,4 +213,49 @@ func get_wishes() {
 		i++
 	}
 
+	Users = nil
+	rows, err = db.Query("Select * from Users")
+	if err != nil {
+		fmt.Println(err)
+	}
+	i = 0
+	for rows.Next() {
+		var us string
+		if err := rows.Scan(&us); err != nil {
+		}
+		Users = append(Users, us)
+		i++
+	}
+
+}
+
+func print_wish_form() {
+	abort := false
+	app := tview.NewApplication()
+	form := tview.NewForm().
+		AddTextView("Wish from: ", os.Getenv(env_wishlist_user), 0, 1, false, false).
+		AddDropDown("Wish to: ", Users, 0, func(option string, optionIndex int) { os.Setenv(env_wishlist_to, option) }).
+		AddTextArea("Wish: ", "", 30, 30, 30, func(text string) { os.Setenv(env_wishlist_wish, text) }).
+		AddButton("Save", func() {
+			app.Stop()
+		}).
+		AddButton("Cancel", func() {
+			app.Stop()
+			abort = true
+		})
+	form.SetBorder(false).SetTitleAlign(tview.AlignLeft)
+	if err := app.SetRoot(form, true).EnableMouse(true).EnablePaste(true).Run(); err != nil {
+		panic(err)
+	}
+	if !abort {
+		db, err := sql.Open("sqlite", os.Getenv(env_database))
+		if err != nil {
+			fmt.Print(err)
+		}
+		_, err = db.Exec("INSERT INTO Wishes ('from', 'to', 'wish') VALUES ('"+os.Getenv(env_wishlist_user)+"', '"+os.Getenv(env_wishlist_to)+"'", "'"+os.Getenv(env_wishlist_wish)+"')")
+		if err != nil {
+			fmt.Print(err)
+		}
+		db.Close()
+	}
 }
