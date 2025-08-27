@@ -148,11 +148,9 @@ func print_main_window() {
 		"  \\ V  V / | \\__ \\ | | | | \\__ \\ |_  \n" +
 		"   \\_/\\_/  |_|___/_| |_|_|_|___/\\__| \n")
 
-	menu := tview.NewTextView().SetTextAlign(tview.AlignCenter).SetText("Menue")
-
 	whises := get_wishes()
 
-	button := tview.NewButton("Hit Enter to close")
+	button := tview.NewButton("Hit to close")
 	button.SetBorder(true).SetRect(0, 0, 22, 3)
 
 	grid := tview.NewGrid().
@@ -160,7 +158,7 @@ func print_main_window() {
 		SetColumns(40, 0).
 		SetBorders(true).
 		AddItem(header, 0, 0, 1, 2, 0, 0, false).
-		AddItem(menu, 1, 0, 1, 1, 0, 100, false).
+		AddItem(button, 1, 0, 1, 1, 0, 100, false).
 		AddItem(whises, 1, 1, 1, 1, 0, 100, false)
 
 	if err := tview.NewApplication().SetRoot(grid, true).EnableMouse(true).Run(); err != nil {
@@ -169,45 +167,30 @@ func print_main_window() {
 }
 
 type Wish struct {
-	ID int8
-	FROM string
-	TO string
-	WISH string
+	ID        int8
+	FROM      string
+	TO        string
+	WISH      string
 	TIMESTAMP string
 }
 
-type Wishes Wish[]
-
 func get_wishes() *tview.List {
-	list := tview.NewList().
-		AddItem("List item 1", "Some explanatory text", 'a', nil).
-		AddItem("List item 2", "Some explanatory text", 'b', nil).
-		AddItem("List item 3", "Some explanatory text", 'c', nil).
-		AddItem("List item 4", "Some explanatory text", 'd', nil).
-		AddItem("Quit", "Press to exit", 'q', nil)
 
-	db, err := sql.Open("sqlite", os.Getenv(env_database))
-	rows, err := db.Query("SELECT * FROM Wishes")
-	if err != nil {
-		return nil
-	}
-	defer rows.Close()
+	alphabet := []int{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't'}
 
-	// An album slice to hold data from returned rows.
-	var albums []Album
+	list := tview.NewList()
 
-	// Loop through rows, using Scan to assign column data to struct fields.
+	db, _ := sql.Open("sqlite", os.Getenv(env_database))
+	defer db.Close()
+	rows, _ := db.Query("SELECT * FROM Wishes")
+	i := 0
 	for rows.Next() {
-		var alb Album
-		if err := rows.Scan(&alb.ID, &alb.Title, &alb.Artist,
-			&alb.Price, &alb.Quantity); err != nil {
-			return albums, err
+		var wi Wish
+		if err := rows.Scan(&wi.ID, &wi.FROM, &wi.TO, &wi.WISH, &wi.TIMESTAMP); err != nil {
 		}
-		albums = append(albums, alb)
+		list.AddItem(string(wi.TIMESTAMP)+": Wish from "+string(wi.FROM)+" to "+string(wi.TO), string(wi.WISH), rune(alphabet[i]), nil)
+		i++
 	}
-	if err = rows.Err(); err != nil {
-		return albums, err
-	}
-	db.Close()
+
 	return list
 }
