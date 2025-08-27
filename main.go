@@ -48,6 +48,7 @@ func main() {
 			init_programm(argus)
 		case "--help":
 			print_help()
+			os.Exit(0)
 		default:
 		}
 	}
@@ -156,18 +157,23 @@ func print_main_window() {
 		"   \\_/\\_/  |_|___/_| |_|_|_|___/\\__| \n")
 
 	alphabet := []int{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't'}
-
 	w := tview.NewList()
-
-	for i := 0; i < len(Wishes); i++ {
-		w.AddItem(Wishes[i].TIMESTAMP+": Whish from "+Wishes[i].FROM+" to "+Wishes[i].TO, Wishes[i].WISH, rune(alphabet[i]), nil)
+	generate_wishlist := func() {
+		for i := 0; i < len(Wishes); i++ {
+			w.AddItem("Whish from "+Wishes[i].FROM+" to "+Wishes[i].TO, Wishes[i].TIMESTAMP+" "+Wishes[i].WISH, rune(alphabet[i]), nil)
+		}
 	}
+	generate_wishlist()
 
-	button_grid := tview.NewGrid().SetRows(2, 2).
+	button_grid := tview.NewGrid().SetRows(3, 3).
 		AddItem(tview.NewButton("Close App").SetSelectedFunc(func() {
 			app.Stop()
 		}), 0, 0, 1, 1, 5, 5, true).
-		AddItem(tview.NewButton("new Wish"), 1, 0, 1, 1, 5, 5, false)
+		AddItem(tview.NewButton("Refresh").SetSelectedFunc(func() {
+			w.Clear()
+			get_wishes()
+			generate_wishlist()
+		}), 1, 0, 1, 1, 5, 5, false)
 
 	grid := tview.NewGrid().
 		SetRows(5, 0).
