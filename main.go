@@ -178,7 +178,7 @@ func print_main_window() {
 			get_wishes()
 			generate_wishlist()
 		}), 1, 0, 1, 1, 5, 5, false).
-		AddItem(tview.NewButton("WriteWish").SetSelectedFunc(func() {
+		AddItem(tview.NewButton("Write Wish").SetSelectedFunc(func() {
 			app.Stop()
 			print_wish_form()
 		}), 2, 0, 1, 1, 5, 5, false)
