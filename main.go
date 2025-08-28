@@ -169,7 +169,7 @@ func print_main_window() {
 	}
 	generate_wishlist()
 
-	button_grid := tview.NewGrid().SetRows(3, 3).
+	button_grid := tview.NewGrid().SetRows(3, 3, 3).
 		AddItem(tview.NewButton("Close App").SetSelectedFunc(func() {
 			app.Stop()
 		}), 0, 0, 1, 1, 5, 5, true).
@@ -179,6 +179,7 @@ func print_main_window() {
 			generate_wishlist()
 		}), 1, 0, 1, 1, 5, 5, false).
 		AddItem(tview.NewButton("WriteWish").SetSelectedFunc(func() {
+			app.Stop()
 			print_wish_form()
 		}), 2, 0, 1, 1, 5, 5, false)
 
@@ -235,7 +236,7 @@ func print_wish_form() {
 	form := tview.NewForm().
 		AddTextView("Wish from: ", os.Getenv(env_wishlist_user), 0, 1, false, false).
 		AddDropDown("Wish to: ", Users, 0, func(option string, optionIndex int) { os.Setenv(env_wishlist_to, option) }).
-		AddTextArea("Wish: ", "", 30, 30, 30, func(text string) { os.Setenv(env_wishlist_wish, text) }).
+		AddTextArea("Wish: ", "", 30, 5, 150, func(text string) { os.Setenv(env_wishlist_wish, text) }).
 		AddButton("Save", func() {
 			app.Stop()
 		}).
@@ -252,10 +253,11 @@ func print_wish_form() {
 		if err != nil {
 			fmt.Print(err)
 		}
-		_, err = db.Exec("INSERT INTO Wishes ('from', 'to', 'wish') VALUES ('"+os.Getenv(env_wishlist_user)+"', '"+os.Getenv(env_wishlist_to)+"'", "'"+os.Getenv(env_wishlist_wish)+"')")
+		_, err = db.Exec("INSERT INTO Wishes ('from', 'to', 'wish') VALUES ('" + os.Getenv(env_wishlist_user) + "', '" + os.Getenv(env_wishlist_to) + "','" + os.Getenv(env_wishlist_wish) + "');")
 		if err != nil {
 			fmt.Print(err)
 		}
 		db.Close()
 	}
+	print_main_window()
 }
