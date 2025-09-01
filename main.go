@@ -14,6 +14,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
+	"time"
 
 	"github.com/rivo/tview"
 
@@ -29,6 +31,7 @@ const (
 	env_wishlist_wish         = "WISHLIST_WISH"
 	settings_location         = "settings.env"
 	default_database_location = "./data.db"
+	refresh_rate              = 30
 )
 
 type Wish struct {
@@ -67,6 +70,9 @@ func main() {
 			os.Exit(0)
 		}
 	}
+
+	//Start Backgroundtask ----------------------------------------------
+	go sceduler_get_wishes()
 
 	//Start main window ----------------------------------------------
 	print_main_window()
@@ -260,4 +266,25 @@ func print_wish_form() {
 		db.Close()
 	}
 	print_main_window()
+}
+
+func sceduler_get_wishes() {
+
+	for {
+		if len(Wishes) > 0 {
+			break
+		}
+		time.Sleep(refresh_rate * time.Second)
+		get_wishes()
+	}
+
+	for {
+		a := Wishes[0].TIMESTAMP
+		time.Sleep(refresh_rate * time.Second)
+		get_wishes()
+		b := Wishes[0].TIMESTAMP
+		if strings.Compare(a, b) != 0 {
+
+		}
+	}
 }
