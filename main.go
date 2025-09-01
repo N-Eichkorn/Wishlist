@@ -32,7 +32,7 @@ const (
 	env_wishlist_wish         = "WISHLIST_WISH"
 	settings_location         = "settings.env"
 	default_database_location = "./data.db"
-	refresh_rate              = 5
+	refresh_rate              = 30
 )
 
 type Wish struct {
