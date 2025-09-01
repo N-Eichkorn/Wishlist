@@ -22,6 +22,7 @@ import (
 	_ "modernc.org/sqlite"
 
 	"github.com/joho/godotenv"
+	"github.com/lxn/walk"
 )
 
 const (
@@ -31,7 +32,7 @@ const (
 	env_wishlist_wish         = "WISHLIST_WISH"
 	settings_location         = "settings.env"
 	default_database_location = "./data.db"
-	refresh_rate              = 30
+	refresh_rate              = 5
 )
 
 type Wish struct {
@@ -40,6 +41,10 @@ type Wish struct {
 	TO        string
 	WISH      string
 	TIMESTAMP string
+}
+
+func (w Wish) to_string() string {
+	return string(w.FROM + " -> " + w.TO + "\n" + w.WISH)
 }
 
 var Wishes []Wish
@@ -284,7 +289,7 @@ func sceduler_get_wishes() {
 		get_wishes()
 		b := Wishes[0].TIMESTAMP
 		if strings.Compare(a, b) != 0 {
-
+			walk.MsgBox(nil, "Wunschliste", Wishes[0].to_string(), walk.MsgBoxIconInformation)
 		}
 	}
 }

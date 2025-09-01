@@ -7,6 +7,11 @@ toolchain go1.24.6
 require github.com/rivo/tview v0.0.0-20250625164341-a4a78f1e05cb
 
 require (
+	github.com/lxn/win v0.0.0-20210218163916-a377121e959e // indirect
+	gopkg.in/Knetic/govaluate.v3 v3.0.0 // indirect
+)
+
+require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/bit101/go-ansi v1.5.4 // indirect
 	github.com/charmbracelet/bubbletea v1.3.6 // indirect
@@ -22,6 +27,7 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
+	github.com/lxn/walk v0.0.0-20210112085537-c389da54e794
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
