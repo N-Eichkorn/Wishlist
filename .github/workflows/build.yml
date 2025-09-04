@@ -29,3 +29,5 @@ jobs:
           name: wishlist-windows-${{ matrix.arch }}
           path: | 
             wishlist-windows-${{ matrix.arch }}.exe
+            sql_init.sql
+            README.md
