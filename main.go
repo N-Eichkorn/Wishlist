@@ -56,6 +56,7 @@ func main() {
 		switch argus[1] {
 		case "--init":
 			init_programm(argus)
+			os.Exit(0)
 		case "--help":
 			print_help()
 			os.Exit(0)
@@ -120,7 +121,7 @@ func init_programm(argus []string) {
 func print_help() {
 	fmt.Print("Possible Options: \n " +
 		"\t --help \t show this help site \n" +
-		"\t --init <path> \t create database  at <path>. If path is empty the path is ./data.db \n")
+		"\t --init <path> \t create database  at <path>. Default is ./data.db \n")
 }
 
 func register_user() bool {
