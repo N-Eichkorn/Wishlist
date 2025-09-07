@@ -60,6 +60,8 @@ func main() {
 		case "--help":
 			print_help()
 			os.Exit(0)
+		case "--update":
+			update_programm()
 		default:
 		}
 	}
@@ -116,6 +118,20 @@ func init_programm(argus []string) {
 	data := []byte(env_database + "=" + database_location + "\n" +
 		env_wishlist_user + "=" + "null\n")
 	os.WriteFile(settings_location, data, 0644)
+}
+
+func update_programm() {
+	db, err := sql.Open("sqlite", os.Getenv(env_database))
+	if err != nil {
+		fmt.Print(err)
+	}
+	defer db.Close()
+	_, err = db.Exec("Select version_number FROM VERSION")
+	if err == nil {
+		fmt.Println("No Update needed!")
+		os.Exit(0)
+	}
+	//STOP
 }
 
 func print_help() {
