@@ -66,9 +66,7 @@ func main() {
 		}
 	}
 	//Load ENV file----------------------------------------------
-	if godotenv.Load(settings_location) != nil {
-		log.Fatal("Error loading .env file")
-	}
+	load_env_file()
 
 	//Check if user is registerd ----------------------------------------------
 	if os.Getenv(env_wishlist_user) == "null" {
@@ -84,6 +82,12 @@ func main() {
 	print_main_window()
 }
 
+func load_env_file() {
+	if godotenv.Load(settings_location) != nil {
+		log.Fatal("Error loading .env file")
+	}
+}
+
 func init_programm(argus []string) {
 	var database_location string
 	//setup database ----------------------------------------------
@@ -93,17 +97,7 @@ func init_programm(argus []string) {
 		database_location = default_database_location
 	}
 
-	db, err := sql.Open("sqlite", database_location)
-	if err != nil {
-		fmt.Print(err)
-	}
-	sql_init, _ := os.ReadFile("sql_init.sql")
-	_, err = db.Exec(string(sql_init))
-	if err != nil {
-		fmt.Print(err)
-	}
-	fmt.Println("\t + database initiated")
-	db.Close()
+	setup_database(database_location)
 
 	//setup settings.env ----------------------------------------------
 
@@ -120,18 +114,45 @@ func init_programm(argus []string) {
 	os.WriteFile(settings_location, data, 0644)
 }
 
+func setup_database(database_location string) {
+	db, err := sql.Open("sqlite", database_location)
+	if err != nil {
+		fmt.Print(err)
+	}
+	sql_init, _ := os.ReadFile("sql_init.sql")
+	_, err = db.Exec(string(sql_init))
+	if err != nil {
+		fmt.Print(err)
+	}
+	fmt.Println("\t + database initiated")
+	db.Close()
+}
+
 func update_programm() {
+	load_env_file()
+	get_wishes()
+	os.Remove(os.Getenv(env_database))
+	setup_database(os.Getenv(env_database))
 	db, err := sql.Open("sqlite", os.Getenv(env_database))
 	if err != nil {
 		fmt.Print(err)
 	}
-	defer db.Close()
-	_, err = db.Exec("Select version_number FROM VERSION")
-	if err == nil {
-		fmt.Println("No Update needed!")
-		os.Exit(0)
+	for _, us := range Users {
+		_, err = db.Exec("INSERT INTO Users VALUES (?);", us)
+		if err != nil {
+			fmt.Print(err)
+		}
 	}
-	//STOP
+
+	for _, wi := range Wishes {
+		_, err = db.Exec("INSERT INTO Wishes (from, to, wish, timestamp) VALUES (?,?,?,?);", wi.FROM, wi.TO, wi.WISH, wi.TIMESTAMP)
+		if err != nil {
+			fmt.Print(err)
+		}
+	}
+
+	db.Close()
+
 }
 
 func print_help() {
@@ -161,7 +182,7 @@ func register_user() bool {
 	if err != nil {
 		fmt.Print(err)
 	}
-	_, err = db.Exec("INSERT INTO Users VALUES ('" + os.Getenv(env_wishlist_user) + "');")
+	_, err = db.Exec("INSERT INTO Users VALUES (?);", os.Getenv(env_wishlist_user))
 	if err != nil {
 		fmt.Print(err)
 	}
@@ -279,7 +300,7 @@ func print_wish_form() {
 		if err != nil {
 			fmt.Print(err)
 		}
-		_, err = db.Exec("INSERT INTO Wishes ('from', 'to', 'wish') VALUES ('" + os.Getenv(env_wishlist_user) + "', '" + os.Getenv(env_wishlist_to) + "','" + os.Getenv(env_wishlist_wish) + "');")
+		_, err = db.Exec("INSERT INTO Wishes ('from', 'to', 'wish') VALUES (?,?,?);", os.Getenv(env_wishlist_user), os.Getenv(env_wishlist_to), os.Getenv(env_wishlist_wish))
 		if err != nil {
 			fmt.Print(err)
 		}
