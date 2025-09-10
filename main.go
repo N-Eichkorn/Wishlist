@@ -28,6 +28,7 @@ const (
 	env_wishlist_user         = "WISHLIST_USER"
 	env_wishlist_to           = "WISHLIST_TO"
 	env_wishlist_wish         = "WISHLIST_WISH"
+	env_broadcast             = "WISHLIST_BROADCAST"
 	settings_location         = "settings.env"
 	default_database_location = "./data.db"
 	refresh_rate              = 30
@@ -39,6 +40,7 @@ type Wish struct {
 	TO        string
 	WISH      string
 	TIMESTAMP string
+	BROADCAST bool
 }
 
 func (w Wish) to_string() string {
@@ -60,8 +62,6 @@ func main() {
 		case "--help":
 			print_help()
 			os.Exit(0)
-		case "--update":
-			update_programm()
 		default:
 		}
 	}
@@ -126,33 +126,6 @@ func setup_database(database_location string) {
 	}
 	fmt.Println("\t + database initiated")
 	db.Close()
-}
-
-func update_programm() {
-	load_env_file()
-	get_wishes()
-	os.Remove(os.Getenv(env_database))
-	setup_database(os.Getenv(env_database))
-	db, err := sql.Open("sqlite", os.Getenv(env_database))
-	if err != nil {
-		fmt.Print(err)
-	}
-	for _, us := range Users {
-		_, err = db.Exec("INSERT INTO Users VALUES (?);", us)
-		if err != nil {
-			fmt.Print(err)
-		}
-	}
-
-	for _, wi := range Wishes {
-		_, err = db.Exec("INSERT INTO Wishes (from, to, wish, timestamp) VALUES (?,?,?,?);", wi.FROM, wi.TO, wi.WISH, wi.TIMESTAMP)
-		if err != nil {
-			fmt.Print(err)
-		}
-	}
-
-	db.Close()
-
 }
 
 func print_help() {
@@ -255,9 +228,9 @@ func get_wishes() {
 	i := 0
 	for rows.Next() {
 		var wi Wish
-		if err := rows.Scan(&wi.ID, &wi.FROM, &wi.TO, &wi.WISH, &wi.TIMESTAMP); err != nil {
+		if err := rows.Scan(&wi.ID, &wi.FROM, &wi.TO, &wi.WISH, &wi.TIMESTAMP, &wi.BROADCAST); err != nil {
 		}
-		Wishes = append(Wishes, Wish{ID: wi.ID, FROM: wi.FROM, TO: wi.TO, WISH: wi.WISH, TIMESTAMP: wi.TIMESTAMP})
+		Wishes = append(Wishes, Wish{ID: wi.ID, FROM: wi.FROM, TO: wi.TO, WISH: wi.WISH, TIMESTAMP: wi.TIMESTAMP, BROADCAST: wi.BROADCAST})
 		i++
 	}
 
@@ -283,6 +256,13 @@ func print_wish_form() {
 	form := tview.NewForm().
 		AddTextView("Wish from: ", os.Getenv(env_wishlist_user), 0, 1, false, false).
 		AddDropDown("Wish to: ", Users, 0, func(option string, optionIndex int) { os.Setenv(env_wishlist_to, option) }).
+		AddCheckbox("Broadcast to all users", false, func(option bool) {
+			if option {
+				os.Setenv(env_broadcast, "0")
+			} else {
+				os.Setenv(env_broadcast, "1")
+			}
+		}).
 		AddTextArea("Wish: ", "", 30, 5, 150, func(text string) { os.Setenv(env_wishlist_wish, text) }).
 		AddButton("Save", func() {
 			app.Stop()
@@ -300,7 +280,7 @@ func print_wish_form() {
 		if err != nil {
 			fmt.Print(err)
 		}
-		_, err = db.Exec("INSERT INTO Wishes ('from', 'to', 'wish') VALUES (?,?,?);", os.Getenv(env_wishlist_user), os.Getenv(env_wishlist_to), os.Getenv(env_wishlist_wish))
+		_, err = db.Exec("INSERT INTO Wishes ('from', 'to', 'wish', 'broadcast') VALUES (?,?,?,?);", os.Getenv(env_wishlist_user), os.Getenv(env_wishlist_to), os.Getenv(env_wishlist_wish), os.Getenv(env_broadcast))
 		if err != nil {
 			fmt.Print(err)
 		}
