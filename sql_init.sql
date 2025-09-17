@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS Wishes (
 	"to"	TEXT NOT NULL,
 	"wish"	TEXT NOT NULL,
 	"timestamp"	datetime,
-	"broadcast" TEXT NOT NULL DEFAULT 0,
+	"broadcast" TEXT,
 	PRIMARY KEY("id" AUTOINCREMENT),
 	FOREIGN KEY("from") REFERENCES "Users"("Username"),
 	FOREIGN KEY("to") REFERENCES "Users"("Username")

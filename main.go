@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -28,7 +29,6 @@ const (
 	env_wishlist_user         = "WISHLIST_USER"
 	env_wishlist_to           = "WISHLIST_TO"
 	env_wishlist_wish         = "WISHLIST_WISH"
-	env_broadcast             = "WISHLIST_BROADCAST"
 	settings_location         = "settings.env"
 	default_database_location = "./data.db"
 	refresh_rate              = 30
@@ -40,7 +40,7 @@ type Wish struct {
 	TO        string
 	WISH      string
 	TIMESTAMP string
-	BROADCAST bool
+	BROADCAST string
 }
 
 func (w Wish) to_string() string {
@@ -251,18 +251,13 @@ func get_wishes() {
 }
 
 func print_wish_form() {
+	broadcast := "false"
 	abort := false
 	app := tview.NewApplication()
 	form := tview.NewForm().
 		AddTextView("Wish from: ", os.Getenv(env_wishlist_user), 0, 1, false, false).
 		AddDropDown("Wish to: ", Users, 0, func(option string, optionIndex int) { os.Setenv(env_wishlist_to, option) }).
-		AddCheckbox("Broadcast to all users", false, func(option bool) {
-			if option {
-				os.Setenv(env_broadcast, "0")
-			} else {
-				os.Setenv(env_broadcast, "1")
-			}
-		}).
+		AddCheckbox("Broadcast to all users", false, func(checked bool) { broadcast = strconv.FormatBool(checked) }).
 		AddTextArea("Wish: ", "", 30, 5, 150, func(text string) { os.Setenv(env_wishlist_wish, text) }).
 		AddButton("Save", func() {
 			app.Stop()
@@ -271,6 +266,7 @@ func print_wish_form() {
 			app.Stop()
 			abort = true
 		})
+
 	form.SetBorder(false).SetTitleAlign(tview.AlignLeft)
 	if err := app.SetRoot(form, true).EnableMouse(true).EnablePaste(true).Run(); err != nil {
 		panic(err)
@@ -280,7 +276,7 @@ func print_wish_form() {
 		if err != nil {
 			fmt.Print(err)
 		}
-		_, err = db.Exec("INSERT INTO Wishes ('from', 'to', 'wish', 'broadcast') VALUES (?,?,?,?);", os.Getenv(env_wishlist_user), os.Getenv(env_wishlist_to), os.Getenv(env_wishlist_wish), os.Getenv(env_broadcast))
+		_, err = db.Exec("INSERT INTO Wishes ('from', 'to', 'wish', 'broadcast') VALUES (?,?,?,?);", os.Getenv(env_wishlist_user), os.Getenv(env_wishlist_to), os.Getenv(env_wishlist_wish), broadcast)
 		if err != nil {
 			fmt.Print(err)
 		}
