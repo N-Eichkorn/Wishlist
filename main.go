@@ -27,8 +27,6 @@ import (
 const (
 	env_database              = "DATABASE"
 	env_wishlist_user         = "WISHLIST_USER"
-	env_wishlist_to           = "WISHLIST_TO"
-	env_wishlist_wish         = "WISHLIST_WISH"
 	settings_location         = "settings.env"
 	default_database_location = "./data.db"
 	refresh_rate              = 30
@@ -252,13 +250,16 @@ func get_wishes() {
 
 func print_wish_form() {
 	broadcast := "false"
+	var wishlist_to string
+	var wishlist_wish string
 	abort := false
+
 	app := tview.NewApplication()
 	form := tview.NewForm().
 		AddTextView("Wish from: ", os.Getenv(env_wishlist_user), 0, 1, false, false).
-		AddDropDown("Wish to: ", Users, 0, func(option string, optionIndex int) { os.Setenv(env_wishlist_to, option) }).
+		AddDropDown("Wish to: ", Users, 0, func(option string, optionIndex int) { wishlist_to = option }).
 		AddCheckbox("Broadcast to all users", false, func(checked bool) { broadcast = strconv.FormatBool(checked) }).
-		AddTextArea("Wish: ", "", 30, 5, 150, func(text string) { os.Setenv(env_wishlist_wish, text) }).
+		AddTextArea("Wish: ", "", 30, 5, 150, func(text string) { wishlist_wish = text }).
 		AddButton("Save", func() {
 			app.Stop()
 		}).
@@ -276,7 +277,7 @@ func print_wish_form() {
 		if err != nil {
 			fmt.Print(err)
 		}
-		_, err = db.Exec("INSERT INTO Wishes ('from', 'to', 'wish', 'broadcast') VALUES (?,?,?,?);", os.Getenv(env_wishlist_user), os.Getenv(env_wishlist_to), os.Getenv(env_wishlist_wish), broadcast)
+		_, err = db.Exec("INSERT INTO Wishes ('from', 'to', 'wish', 'broadcast') VALUES (?,?,?,?);", os.Getenv(env_wishlist_user), wishlist_to, wishlist_wish, broadcast)
 		if err != nil {
 			fmt.Print(err)
 		}
