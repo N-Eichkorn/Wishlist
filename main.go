@@ -40,7 +40,7 @@ type Wish struct {
 	TO        string
 	WISH      string
 	TIMESTAMP string
-	BROADCAST string
+	BROADCAST bool
 }
 
 func (w Wish) to_string() string {
@@ -300,8 +300,8 @@ func sceduler_get_wishes() {
 		time.Sleep(refresh_rate * time.Second)
 		get_wishes()
 		b := Wishes[0].TIMESTAMP
-		if strings.Compare(a, b) != 0 {
-			walk.MsgBox(nil, "Wunschliste", Wishes[0].to_string(), walk.MsgBoxIconInformation)
+		if strings.Compare(a, b) != 0 && (Wishes[0].BROADCAST || Wishes[0].TO == os.Getenv(env_wishlist_user)) {
+			walk.MsgBox(nil, "Wunschliste von "+os.Getenv(env_wishlist_user), Wishes[0].to_string(), walk.MsgBoxIconInformation)
 		}
 	}
 }
