@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -38,7 +37,6 @@ type Wish struct {
 	TO        string
 	WISH      string
 	TIMESTAMP string
-	BROADCAST bool
 }
 
 func (w Wish) to_string() string {
@@ -226,9 +224,9 @@ func get_wishes() {
 	i := 0
 	for rows.Next() {
 		var wi Wish
-		if err := rows.Scan(&wi.ID, &wi.FROM, &wi.TO, &wi.WISH, &wi.TIMESTAMP, &wi.BROADCAST); err != nil {
+		if err := rows.Scan(&wi.ID, &wi.FROM, &wi.TO, &wi.WISH, &wi.TIMESTAMP); err != nil {
 		}
-		Wishes = append(Wishes, Wish{ID: wi.ID, FROM: wi.FROM, TO: wi.TO, WISH: wi.WISH, TIMESTAMP: wi.TIMESTAMP, BROADCAST: wi.BROADCAST})
+		Wishes = append(Wishes, Wish{ID: wi.ID, FROM: wi.FROM, TO: wi.TO, WISH: wi.WISH, TIMESTAMP: wi.TIMESTAMP})
 		i++
 	}
 
@@ -249,7 +247,6 @@ func get_wishes() {
 }
 
 func print_wish_form() {
-	broadcast := "false"
 	var wishlist_to string
 	var wishlist_wish string
 	abort := false
@@ -258,7 +255,6 @@ func print_wish_form() {
 	form := tview.NewForm().
 		AddTextView("Wish from: ", os.Getenv(env_wishlist_user), 0, 1, false, false).
 		AddDropDown("Wish to: ", Users, 0, func(option string, optionIndex int) { wishlist_to = option }).
-		AddCheckbox("Broadcast to all users", false, func(checked bool) { broadcast = strconv.FormatBool(checked) }).
 		AddTextArea("Wish: ", "", 30, 5, 150, func(text string) { wishlist_wish = text }).
 		AddButton("Save", func() {
 			app.Stop()
@@ -277,7 +273,7 @@ func print_wish_form() {
 		if err != nil {
 			fmt.Print(err)
 		}
-		_, err = db.Exec("INSERT INTO Wishes ('from', 'to', 'wish', 'broadcast') VALUES (?,?,?,?);", os.Getenv(env_wishlist_user), wishlist_to, wishlist_wish, broadcast)
+		_, err = db.Exec("INSERT INTO Wishes ('from', 'to', 'wish') VALUES (?,?,?);", os.Getenv(env_wishlist_user), wishlist_to, wishlist_wish)
 		if err != nil {
 			fmt.Print(err)
 		}
@@ -301,7 +297,7 @@ func sceduler_get_wishes() {
 		time.Sleep(refresh_rate * time.Second)
 		get_wishes()
 		b := Wishes[0].TIMESTAMP
-		if strings.Compare(a, b) != 0 && (Wishes[0].BROADCAST || Wishes[0].TO == os.Getenv(env_wishlist_user)) {
+		if strings.Compare(a, b) != 0 && (Wishes[0].TO == "Alle" || Wishes[0].TO == os.Getenv(env_wishlist_user)) {
 			walk.MsgBox(nil, "Wunschliste von "+os.Getenv(env_wishlist_user), Wishes[0].to_string(), walk.MsgBoxIconInformation)
 		}
 	}
